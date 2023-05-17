@@ -12,19 +12,7 @@ peer.on("open", (id) => {
 });
 function App() {
   const inputRef = useRef(null);
-  const mediaStream = useRef<null | MediaStream>(null);
   const videoRef = useRef<null | HTMLVideoElement>(null);
-  useEffect(() => {
-    navigator.mediaDevices
-      .getUserMedia({
-        audio: true,
-        video: true,
-      })
-      .then((value) => {
-        mediaStream.current = value;
-      })
-      .catch((reason) => console.log(reason));
-  }, []);
   peer.on("connection", function (conn) {
     conn.on("open", function () {
       // Receive messages
@@ -40,21 +28,33 @@ function App() {
       dc.send(inputRef.current.value);
     });
   };
-  const handleCall = () => {
-    const call = peer.call("cbnbfj34-djhd-djdj34", mediaStream.current);
+  const handleCall = async () => {
+    const mediaStream = navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true,
+    });
+    const call = peer.call("cbnbfj34-djhd-djdj34", mediaStream);
     call.on("stream", function (stream) {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        videoRef.current.addEventListener("loadedmetadata", () => {
+          videoRef.current.play();
+        });
       }
     });
   };
-  peer.on("call", function (call) {
-    call.answer(mediaStream.current);
+  peer.on("call", async function (call) {
+    const mediaStream = navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true,
+    });
+    call.answer(mediaStream);
     call.on("stream", function (stream) {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        videoRef.current.addEventListener("loadedmetadata", () => {
+          videoRef.current.play();
+        });
       }
     });
   });
