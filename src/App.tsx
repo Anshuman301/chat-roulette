@@ -29,7 +29,7 @@ function App() {
     });
   };
   const handleCall = async () => {
-    const mediaStream = navigator.mediaDevices.getUserMedia({
+    const mediaStream = await navigator.mediaDevices.getUserMedia({
       audio: true,
       video: true,
     });
@@ -44,19 +44,26 @@ function App() {
     });
   };
   peer.on("call", async function (call) {
-    const mediaStream = navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: true,
-    });
-    call.answer(mediaStream);
-    call.on("stream", function (stream) {
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.addEventListener("loadedmetadata", () => {
-          videoRef.current.play();
-        });
-      }
-    });
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true,
+      });
+      console.log("CALL INITIATED");
+      call.answer(mediaStream);
+      call.on("stream", function (stream) {
+        console.log("CALL STREAM");
+        if (videoRef.current) {
+          console.log("hi");
+          videoRef.current.srcObject = stream;
+          videoRef.current.addEventListener("loadedmetadata", async () => {
+            await videoRef.current.play();
+          });
+        }
+      });
+    } catch (err) {
+      console.log(err);
+    }
   });
   return (
     <div>
@@ -64,7 +71,7 @@ function App() {
       <input name="inputText" ref={inputRef} />
       <button onClick={handleSend}>Send</button>
       <button onClick={handleCall}>Call</button>
-      <video ref={videoRef} />
+      <video ref={videoRef} muted={true} />
     </div>
   );
 }
